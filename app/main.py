@@ -1,15 +1,3 @@
-<<<<<<< HEAD
-# Estrutura das rotas:
-#   /health                          → verificação de saúde (pública)
-#   /scripts                         → gerenciar scripts
-#   /logs                            → histórico de execuções
-#   /config/token                    → trocar token de admin
-#   /usuarios                        → cadastro, login, perfil (freemium)
-#   /analytics                       → métricas e estatísticas (somente admin)
-#   /webhooks/stripe                 → receber eventos de pagamento do Stripe
-
-=======
->>>>>>> 6781cb0 (Limpeza geral do codigo)
 from fastapi import Depends, FastAPI, HTTPException, Request, status
 
 from app.database import inicializar_banco, get_connection
@@ -44,12 +32,7 @@ def ao_iniciar():
     print("IsyShell iniciada. Acesse /docs para a documentacao interativa.")
 
 
-<<<<<<< HEAD
-
-# ROTA DE SAÚDE — pública, sem token
-=======
 # --- Saude ---------------------------------------------------------------
->>>>>>> 6781cb0 (Limpeza geral do codigo)
 
 @app.get("/health", tags=["Sistema"])
 def health_check():
@@ -57,11 +40,7 @@ def health_check():
     return {"status": "ok", "mensagem": "IsyShell esta funcionando!"}
 
 
-<<<<<<< HEAD
-# ROTAS DE SCRIPTS — listar, cadastrar, editar, executar
-=======
 # --- Scripts -------------------------------------------------------------
->>>>>>> 6781cb0 (Limpeza geral do codigo)
 
 @app.get("/scripts", tags=["Scripts"])
 def listar_scripts(usuario: dict = Depends(verificar_token)):
@@ -161,12 +140,7 @@ def executar(script_id: int, body: ExecutarRequest, usuario: dict = Depends(veri
     }
 
 
-<<<<<<< HEAD
-
-# ROTAS DE LOGS — consultar histórico de execuções
-=======
 # --- Logs ----------------------------------------------------------------
->>>>>>> 6781cb0 (Limpeza geral do codigo)
 
 @app.get("/logs", tags=["Auditoria"])
 def consultar_logs(limite: int = 50, usuario: dict = Depends(verificar_token)):
@@ -196,11 +170,7 @@ def consultar_logs(limite: int = 50, usuario: dict = Depends(verificar_token)):
     return {"status": "sucesso", "total": len(registros), "logs": [dict(r) for r in registros]}
 
 
-<<<<<<< HEAD
-# ROTA DE CONFIGURAÇÃO — trocar o token de administrador
-=======
 # --- Configuracao --------------------------------------------------------
->>>>>>> 6781cb0 (Limpeza geral do codigo)
 
 @app.put("/config/token", tags=["Configuracao"])
 def trocar_token(dados: TrocarTokenRequest, usuario: dict = Depends(exigir_admin)):
@@ -215,20 +185,16 @@ def trocar_token(dados: TrocarTokenRequest, usuario: dict = Depends(exigir_admin
     return {"status": "sucesso", "mensagem": "Token atualizado com sucesso."}
 
 
-<<<<<<< HEAD
-# ROTAS DE USUÁRIOS — cadastro, login, perfil, plano
-=======
 # --- Usuarios ------------------------------------------------------------
->>>>>>> 6781cb0 (Limpeza geral do codigo)
 
 @app.post("/usuarios/registrar", tags=["Usuarios"], status_code=201)
 def registrar(dados: UsuarioRegistrar):
     """Cria conta com plano free. Rota publica. Retorna o token de API gerado."""
     novo = registrar_usuario(dados.email, dados.senha)
     return {
-        "status":  "sucesso",
+        "status":   "sucesso",
         "mensagem": "Conta criada. Guarde o token de API.",
-        "usuario": {"id": novo["id"], "email": novo["email"], "plano": novo["plano"], "token": novo["token"]},
+        "usuario":  {"id": novo["id"], "email": novo["email"], "plano": novo["plano"], "token": novo["token"]},
     }
 
 
@@ -237,9 +203,9 @@ def login(dados: UsuarioLogin):
     """Autentica com email e senha. Rota publica. Retorna o token de API."""
     u = autenticar_usuario(dados.email, dados.senha)
     return {
-        "status":  "sucesso",
+        "status":   "sucesso",
         "mensagem": "Login realizado.",
-        "usuario": {"id": u["id"], "email": u["email"], "plano": u["plano"], "token": u["token"]},
+        "usuario":  {"id": u["id"], "email": u["email"], "plano": u["plano"], "token": u["token"]},
     }
 
 
@@ -289,12 +255,7 @@ def alterar_plano(usuario_id: int, dados: AtualizarPlano, admin: dict = Depends(
     return {"status": "sucesso", "mensagem": f"Plano do usuario ID {usuario_id} atualizado para '{dados.plano}'."}
 
 
-<<<<<<< HEAD
-
-# ROTAS DE ANALYTICS — métricas e estatísticas (somente admin)
-=======
 # --- Analytics -----------------------------------------------------------
->>>>>>> 6781cb0 (Limpeza geral do codigo)
 
 @app.get("/analytics/resumo", tags=["Analytics"])
 def analytics_resumo(data: str = None, admin: dict = Depends(exigir_admin)):
@@ -320,12 +281,7 @@ def analytics_falhas(data: str = None, limite: int = 50, admin: dict = Depends(e
     return {"status": "sucesso", "falhas": falhas_do_dia(data, limite)}
 
 
-<<<<<<< HEAD
-
-# WEBHOOK DO STRIPE — recebe eventos de pagamento
-=======
 # --- Webhook Stripe ------------------------------------------------------
->>>>>>> 6781cb0 (Limpeza geral do codigo)
 
 @app.post("/webhooks/stripe", tags=["Pagamentos"])
 async def webhook_stripe(request: Request):
