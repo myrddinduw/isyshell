@@ -1,3 +1,4 @@
+from contextlib import asynccontextmanager
 from fastapi import Depends, FastAPI, HTTPException, Request, status
 
 from app.database import inicializar_banco, get_connection
@@ -15,6 +16,13 @@ from app.schemas   import (
     UsuarioRegistrar, UsuarioLogin, AtualizarPlano,
 )
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    inicializar_banco()
+    print("IsyShell iniciada. Acesse /docs para a documentacao interativa.")
+    yield
+
+
 app = FastAPI(
     title="IsyShell API",
     description=(
@@ -23,13 +31,8 @@ app = FastAPI(
         "controle de acesso por plano e analytics de uso."
     ),
     version="1.0.0",
+    lifespan=lifespan,
 )
-
-
-@app.on_event("startup")
-def ao_iniciar():
-    inicializar_banco()
-    print("IsyShell iniciada. Acesse /docs para a documentacao interativa.")
 
 
 # --- Saude ---------------------------------------------------------------

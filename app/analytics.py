@@ -113,7 +113,7 @@ def falhas_do_dia(data: str = None, limite: int = 50) -> list:
     rows = conn.execute(
         """
         SELECT
-            e.id, e.horario, e.codigo_retorno, e.stderr, e.duracao_segundos,
+            e.id, e.horario, e.stderr, e.duracao_segundos,
             s.nome  AS nome_script,
             u.email AS email_usuario
         FROM execucoes e

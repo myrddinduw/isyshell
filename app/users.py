@@ -1,6 +1,6 @@
 import hashlib
 import secrets
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 from fastapi import HTTPException
 
 from app.database import get_connection, obter_usuario_por_email
@@ -48,7 +48,7 @@ def registrar_usuario(email: str, senha: str) -> dict:
         raise HTTPException(400, {"status": "erro", "mensagem": "Senha deve ter pelo menos 8 caracteres."})
 
     token     = secrets.token_hex(32)
-    criado_em = datetime.utcnow().isoformat()
+    criado_em = datetime.now(timezone.utc).isoformat()
 
     conn = get_connection()
     try:
