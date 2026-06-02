@@ -1,0 +1,14 @@
+# Bibliotecas Python necessárias para o projeto.
+# Para instalar manualmente (fora do Docker): pip install -r requirements.txt
+
+# FastAPI — framework web moderno e rápido para criar APIs REST em Python
+fastapi==0.111.0
+
+# Uvicorn — servidor web que roda a nossa API FastAPI (como um "motor" para o app)
+uvicorn[standard]==0.29.0
+
+# Pydantic — validação automática de dados; já incluída no FastAPI, listada por clareza
+pydantic==2.7.1
+
+# Python-multipart — necessário para o FastAPI processar formulários (boas práticas)
+python-multipart==0.0.9

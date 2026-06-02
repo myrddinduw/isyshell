@@ -1,0 +1,49 @@
+# docker-compose.yml — Orquestra os containers do projeto.
+#
+# O que é docker-compose? É uma ferramenta que permite definir e rodar
+# múltiplos containers com um único comando: "docker-compose up".
+# Aqui temos apenas 1 serviço (a API), mas o compose facilita o gerenciamento.
+
+services:
+
+  # Serviço principal: a nossa API IsyShell
+  isyshell:
+
+    # "build: ." diz ao compose para construir a imagem usando o Dockerfile
+    # que está na pasta atual (representada pelo ponto ".").
+    build: .
+
+    # Nome fixo para o container (facilita identificar nos logs e no "docker ps")
+    container_name: isyshell-app
+
+    # PORTA: mapeia a porta do host para a porta do container.
+    # Formato: "porta_do_host:porta_do_container"
+    # Acesse a API em: http://localhost:8000
+    ports:
+      - "8000:8000"
+
+    # VOLUMES: monta pastas do computador host dentro do container.
+    # Isso é ESSENCIAL: os scripts .sh ficam no host e são lidos pelo container,
+    # sem precisar reconstruir a imagem cada vez que um script muda.
+    #
+    # Formato: "./pasta_no_host:/pasta_no_container"
+    volumes:
+      # Monta a pasta local "scripts/" como "/scripts" dentro do container
+      - ./scripts:/scripts:ro   # ":ro" = read-only, o container só pode LER os scripts
+
+      # Persiste o banco de dados SQLite fora do container.
+      # Sem isso, o banco seria apagado toda vez que o container fosse reiniciado!
+      - ./data:/app/data
+
+    # VARIÁVEIS DE AMBIENTE: configuram o comportamento da aplicação.
+    # Elas substituem valores padrão definidos no código com os.getenv().
+    environment:
+      # Pasta onde a API vai procurar os scripts .sh
+      - SCRIPTS_PATH=/scripts
+
+      # Caminho do banco de dados dentro do container
+      - DATABASE_PATH=/app/data/isyshell.db
+
+    # RESTART: reinicia o container automaticamente se ele travar ou o servidor reiniciar.
+    # "unless-stopped" = reinicia sempre, a menos que você pare manualmente.
+    restart: unless-stopped
