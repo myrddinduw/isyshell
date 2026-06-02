@@ -12,8 +12,10 @@
 | **X-Isy-Token** | Header personalizado deste projeto para autenticação; o prefixo "X-" indica header personalizado. |
 | **Autenticação** | Processo de verificar quem é o usuário (provar identidade). |
 | **Autorização** | Processo de verificar o que o usuário pode fazer (permissões). |
-| **HTTP 401** | Código de resposta que significa "não autorizado" — credenciais ausentes ou inválidas. |
-| **HTTP 404** | Código de resposta que significa "não encontrado" — recurso inexistente. |
+| **HTTP 401** | Código de resposta: "não autorizado" — credenciais ausentes ou inválidas. |
+| **HTTP 403** | Código de resposta: "proibido" — autenticado, mas sem permissão para aquela ação. |
+| **HTTP 404** | Código de resposta: "não encontrado" — recurso inexistente. |
+| **HTTP 429** | Código de resposta: "muitas requisições" — limite de uso atingido (rate limiting). |
 | **subprocess** | Módulo nativo do Python que permite executar comandos do sistema operacional. |
 | **stdout** | "Standard Output" — a saída normal de um programa/script (o que aparece no terminal). |
 | **stderr** | "Standard Error" — a saída de erros de um programa/script (erros e avisos). |
@@ -32,9 +34,20 @@
 | **docker-compose** | Ferramenta para definir e rodar múltiplos containers com um único arquivo de configuração. |
 | **Uvicorn** | Servidor web ASGI para Python — é ele que "serve" a API FastAPI na porta 8000. |
 | **Swagger** | Interface web gerada automaticamente pelo FastAPI em `/docs` para testar a API no navegador. |
-| **Webhook** | URL que recebe requisições HTTP quando um evento ocorre — usamos para alertas no Discord. |
+| **Webhook** | URL que recebe requisições HTTP quando um evento ocorre em outro sistema (ex: pagamento confirmado). |
 | **Variável de ambiente** | Valor de configuração passado ao programa pelo sistema operacional, sem precisar alterar código. |
 | **SSH** | Secure Shell — protocolo para acesso remoto seguro a servidores Linux via terminal. |
 | **ASGI** | Interface padrão para servidores web Python assíncronos — permite atender várias requisições ao mesmo tempo. |
 | **Auditoria** | Registro detalhado de todas as ações realizadas num sistema, com data, hora e responsável. |
 | **Shell script** | Arquivo de texto com comandos do terminal (bash) que podem ser executados em sequência. |
+| **Freemium** | Modelo de negócio com plano gratuito limitado e planos pagos com mais recursos. |
+| **Rate Limiting** | Técnica que limita quantas vezes um usuário pode usar um recurso num período (ex: 10/dia). |
+| **Plano** | Nível de acesso de um usuário no sistema freemium: free, pro ou enterprise. |
+| **Hash** | Resultado de uma função matemática irreversível; usado para armazenar senhas com segurança. |
+| **PBKDF2** | Algoritmo padrão de hash para senhas; aplica SHA-256 com muitas iterações para dificultar ataques. |
+| **Salt** | Valor aleatório adicionado à senha antes do hash; garante que senhas iguais gerem hashes diferentes. |
+| **Stripe** | Plataforma de pagamentos online; usada para cobrar assinaturas e notificar upgrades via webhook. |
+| **Analytics** | Análise de dados de uso do sistema para extrair métricas e estatísticas relevantes. |
+| **Dashboard** | Painel visual com resumo de métricas em tempo real. |
+| **Dependência (FastAPI)** | Função executada automaticamente pelo FastAPI antes de uma rota — usada para autenticação e validações. |
+| **Migration** | Alteração incremental no esquema do banco de dados sem apagar dados existentes (ex: ADD COLUMN). |

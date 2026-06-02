@@ -8,68 +8,89 @@ flowchart TD
 
     B --> C{auth.py\nToken válido?}
     C -->|NÃO| D[HTTP 401\nNão Autorizado]
-    C -->|SIM| E[Rota solicitada]
+    C -->|SIM - Admin| E[Acesso Total]
+    C -->|SIM - Usuário| F{Verificações\nde Plano}
 
-    E -->|GET /scripts| F[database.py\nSELECT scripts]
-    E -->|POST /scripts| F
-    E -->|POST /scripts/n/executar| G[executor.py]
-    E -->|GET /logs| F
-    E -->|PUT /config/token| F
+    F -->|Plano insuficiente| G[HTTP 403 Proibido]
+    F -->|Limite diário atingido| H[HTTP 429 Rate Limit]
+    F -->|OK| E
 
-    G --> H{Script ativo\nno banco?}
-    H -->|NÃO| I[Erro: não encontrado]
-    H -->|SIM| J{Parâmetros\nseguros?}
+    E -->|GET /scripts| I[database.py\nSELECT scripts]
+    E -->|POST /scripts| I
+    E -->|POST /scripts/n/executar| J[executor.py]
+    E -->|GET /logs| I
+    E -->|PUT /config/token| I
+    E -->|GET /analytics/*| K[analytics.py\nMétricas SQL]
+    E -->|POST /usuarios/*| L[users.py\nCadastro e Login]
 
-    J -->|NÃO| K[Erro: parâmetro perigoso]
-    J -->|SIM| L[subprocess.run\n sem shell=True\ncomo lista]
+    J --> M{Script ativo\nno banco?}
+    M -->|NÃO| N[Erro: não encontrado]
+    M -->|SIM| O{Parâmetros\nseguros?}
 
-    L --> M[scripts/\npasta com .sh\nmontada via Volume]
-    L --> N[Resultado\nstdout + stderr]
+    O -->|NÃO| P[Erro: parâmetro perigoso]
+    O -->|SIM| Q[subprocess.run\nsem shell=True\ncomo lista\n+ time.time]
 
-    N --> O[database.py\nINSERT execucoes\nauditoria]
-    N --> P{Falhou?}
-    P -->|SIM| Q[alerts.py\nWebhook Discord]
-    P -->|NÃO| R[JSON de sucesso]
-    Q --> R
+    Q --> R[scripts/\npasta com .sh\nmontada via Volume]
+    Q --> S[Resultado\nstdout + stderr\n+ duracao_segundos]
 
-    F --> R
-    O --> R
-    R --> A
+    S --> T[database.py\nINSERT execucoes\nusuario_id + duracao]
+    T --> U[JSON de resposta]
+
+    I --> U
+    K --> U
+    L --> U
+    U --> A
 ```
+
+---
 
 ## Componentes e Responsabilidades
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                        CONTAINER DOCKER                          │
-│                                                                   │
-│  ┌─────────────┐    ┌──────────┐    ┌──────────────────────┐    │
-│  │   main.py   │───▶│  auth.py │    │     executor.py      │    │
-│  │  (roteador) │    │ (porteiro)│    │  (operário seguro)   │    │
-│  └──────┬──────┘    └──────────┘    │  • Valida parâmetros │    │
-│         │                           │  • subprocess lista  │    │
-│         │           ┌──────────┐    │  • Sem shell=True    │    │
-│         ├──────────▶│schemas.py│    └──────────┬───────────┘    │
-│         │           │(moldes)  │               │                │
-│         │           └──────────┘               ▼                │
-│         │                           ┌─────────────────────┐     │
-│         │           ┌──────────┐    │   /scripts/ VOLUME  │     │
-│         ├──────────▶│ alerts.py│    │   limpar_logs.sh    │     │
-│         │           │(Discord) │    │   checar_docker.sh  │     │
-│         │           └──────────┘    └─────────────────────┘     │
-│         │                                                         │
-│         ▼                                                         │
-│  ┌─────────────────────────────────────────────────────────┐    │
-│  │              database.py — SQLite                        │    │
-│  │  ┌──────────┐  ┌─────────────┐  ┌──────────────────┐   │    │
-│  │  │ scripts  │  │  execucoes  │  │  configuracoes   │   │    │
-│  │  │(cadastro)│  │ (auditoria) │  │  (token, etc.)   │   │    │
-│  │  └──────────┘  └─────────────┘  └──────────────────┘   │    │
-│  └─────────────────────────────────────────────────────────┘    │
-│                                /app/data/isyshell.db             │
-└─────────────────────────────────────────────────────────────────┘
-                                         │
-                                    HOST (sua máquina)
-                                    ./data/isyshell.db  (persistido)
-                                    ./scripts/*.sh      (editável)
+┌──────────────────────────────────────────────────────────────────────┐
+│                          CONTAINER DOCKER                             │
+│                                                                        │
+│  ┌─────────────┐    ┌───────────┐    ┌─────────────────────────┐     │
+│  │   main.py   │───▶│  auth.py  │    │      executor.py        │     │
+│  │  (roteador) │    │(porteiro) │    │  • Valida parâmetros    │     │
+│  └──────┬──────┘    └───────────┘    │  • subprocess como lista│     │
+│         │                            │  • Sem shell=True       │     │
+│         │           ┌───────────┐    │  • Mede duracao_segundos│     │
+│         ├──────────▶│schemas.py │    └──────────┬──────────────┘     │
+│         │           │ (moldes)  │               │                     │
+│         │           └───────────┘               ▼                     │
+│         │                            ┌────────────────────┐           │
+│         │           ┌───────────┐    │  /scripts/ VOLUME  │           │
+│         ├──────────▶│ users.py  │    │  limpar_logs.sh    │           │
+│         │           │(freemium) │    │  checar_docker.sh  │           │
+│         │           └───────────┘    └────────────────────┘           │
+│         │                                                              │
+│         │           ┌───────────┐                                      │
+│         ├──────────▶│analytics.py│                                     │
+│         │           │(métricas) │                                      │
+│         │           └───────────┘                                      │
+│         │                                                              │
+│         │           ┌───────────┐                                      │
+│         └──────────▶│payments.py│◀── POST /webhooks/stripe             │
+│                     │ (Stripe)  │        (Stripe envia aqui)           │
+│                     └───────────┘                                      │
+│                                                                        │
+│  ┌──────────────────────────────────────────────────────────────┐     │
+│  │                  database.py — SQLite                         │     │
+│  │  ┌──────────┐  ┌────────────────────────┐  ┌─────────────┐  │     │
+│  │  │ scripts  │  │       execucoes         │  │ configuracoes│  │     │
+│  │  │(cadastro)│  │ usuario_id, duracao_seg │  │(token admin)│  │     │
+│  │  │plano_min │  │ stdout, stderr, status  │  └─────────────┘  │     │
+│  │  └──────────┘  └────────────────────────┘                    │     │
+│  │  ┌──────────────────────────────────────┐                    │     │
+│  │  │              usuarios                │                    │     │
+│  │  │  email, senha_hash, plano, token     │                    │     │
+│  │  └──────────────────────────────────────┘                    │     │
+│  └──────────────────────────────────────────────────────────────┘     │
+│                          /app/data/isyshell.db                         │
+└──────────────────────────────────────────────────────────────────────┘
+                                    │
+                               HOST (sua máquina)
+                               ./data/isyshell.db  (persistido)
+                               ./scripts/*.sh      (editável sem rebuild)
 ```

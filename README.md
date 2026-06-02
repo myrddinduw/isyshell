@@ -3,7 +3,8 @@
 Projeto desenvolvido para o Hackathon FMU + ISY.ONE 2026.1.
 
 **Objetivo:** substituir o acesso manual via SSH por uma API segura, auditada e
-containerizada para executar scripts de manutenção em servidores Linux.
+containerizada para executar scripts de manutenção em servidores Linux —
+com suporte a contas de usuário, planos freemium e analytics de uso.
 
 ---
 
@@ -54,52 +55,31 @@ http://localhost:8000/docs
 
 ---
 
-## Primeira execução: cadastrar e rodar um script
+## Autenticação: dois modos
 
-### Token padrão
+### Modo Admin (token global)
 O token inicial é: `meu-token-secreto-troque-isso`
-Envie-o sempre no header: `X-Isy-Token: meu-token-secreto-troque-isso`
+Use no header de todas as requisições: `X-Isy-Token: meu-token-secreto-troque-isso`
 
-### Passo 1 — Verificar que a API está no ar
+### Modo Usuário (freemium)
+Cada cliente cria sua própria conta e recebe um token pessoal com limite por plano.
+
+---
+
+## Primeira execução (modo admin)
+
+### Verificar que a API está no ar
 ```bash
 curl http://localhost:8000/health
 ```
 
-### Passo 2 — Cadastrar o script de limpeza de logs
-```bash
-curl -X POST http://localhost:8000/scripts \
-  -H "Content-Type: application/json" \
-  -H "X-Isy-Token: meu-token-secreto-troque-isso" \
-  -d '{
-    "nome": "Limpar Logs Antigos",
-    "caminho": "limpar_logs.sh",
-    "descricao": "Remove arquivos de log mais antigos que N dias",
-    "params_info": "Parâmetros: <pasta> <numero_de_dias>",
-    "status": "ativo"
-  }'
-```
-
-### Passo 3 — Cadastrar o script de checagem Docker
-```bash
-curl -X POST http://localhost:8000/scripts \
-  -H "Content-Type: application/json" \
-  -H "X-Isy-Token: meu-token-secreto-troque-isso" \
-  -d '{
-    "nome": "Checar Containers Docker",
-    "caminho": "checar_docker.sh",
-    "descricao": "Exibe status dos containers Docker em execução",
-    "params_info": "Parâmetro opcional: filtro por nome",
-    "status": "ativo"
-  }'
-```
-
-### Passo 4 — Listar os scripts cadastrados
+### Listar os scripts pré-cadastrados
 ```bash
 curl http://localhost:8000/scripts \
   -H "X-Isy-Token: meu-token-secreto-troque-isso"
 ```
 
-### Passo 5 — Executar o script de limpeza (ID 1)
+### Executar um script (ID 1 — Limpar Logs)
 ```bash
 curl -X POST http://localhost:8000/scripts/1/executar \
   -H "Content-Type: application/json" \
@@ -107,39 +87,74 @@ curl -X POST http://localhost:8000/scripts/1/executar \
   -d '{"parametros": ["/tmp/demo_logs", "7"]}'
 ```
 
-### Passo 6 — Consultar o log de auditoria
+### Consultar o log de auditoria
 ```bash
 curl http://localhost:8000/logs \
   -H "X-Isy-Token: meu-token-secreto-troque-isso"
 ```
 
----
-
-## Trocar o token de autenticação
-
+### Trocar o token de administrador
 ```bash
 curl -X PUT http://localhost:8000/config/token \
   -H "Content-Type: application/json" \
   -H "X-Isy-Token: meu-token-secreto-troque-isso" \
-  -d '{"novo_token": "novo-token-super-seguro-2024"}'
+  -d '{"novo_token": "novo-token-super-seguro"}'
 ```
 
 ---
 
-## Configurar alertas no Discord (diferencial)
+## Sistema Freemium (usuários e planos)
 
-1. No seu servidor Discord, crie um canal e vá em **Configurações do canal → Integrações → Webhooks → Novo Webhook**.
-2. Copie a URL gerada.
-3. Edite o `docker-compose.yml` e coloque a URL na variável:
-   ```yaml
-   - DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/SEU_WEBHOOK_AQUI
-   ```
-4. Reinicie o container:
-   ```bash
-   docker-compose down && docker-compose up --build
-   ```
+### Criar uma conta
+```bash
+curl -X POST http://localhost:8000/usuarios/registrar \
+  -H "Content-Type: application/json" \
+  -d '{"email": "cliente@empresa.com", "senha": "minhasenha123"}'
+```
+> A resposta inclui o `token` — use-o como `X-Isy-Token` nas próximas requisições.
 
-Quando qualquer script falhar, o bot enviará uma mensagem automática no canal.
+### Login (recuperar token)
+```bash
+curl -X POST http://localhost:8000/usuarios/login \
+  -H "Content-Type: application/json" \
+  -d '{"email": "cliente@empresa.com", "senha": "minhasenha123"}'
+```
+
+### Ver perfil e plano atual
+```bash
+curl http://localhost:8000/usuarios/meu-perfil \
+  -H "X-Isy-Token: <seu-token>"
+```
+
+### Limites por plano
+
+| Plano        | Execuções/dia | Acesso a scripts    |
+|---|---|---|
+| free         | 10            | Scripts marcados `free` |
+| pro          | 500           | Scripts `free` + `pro`  |
+| enterprise   | Ilimitado     | Todos os scripts        |
+
+---
+
+## Analytics (somente admin)
+
+```bash
+# Resumo do dia (total, falhas, tempo médio)
+curl http://localhost:8000/analytics/resumo \
+  -H "X-Isy-Token: meu-token-secreto-troque-isso"
+
+# Scripts mais executados
+curl http://localhost:8000/analytics/scripts-mais-usados \
+  -H "X-Isy-Token: meu-token-secreto-troque-isso"
+
+# Clientes com mais chamados
+curl http://localhost:8000/analytics/clientes-mais-ativos \
+  -H "X-Isy-Token: meu-token-secreto-troque-isso"
+
+# Falhas do dia com detalhes de erro
+curl http://localhost:8000/analytics/falhas \
+  -H "X-Isy-Token: meu-token-secreto-troque-isso"
+```
 
 ---
 
@@ -161,17 +176,21 @@ docker-compose down
 ## Estrutura de Arquivos
 
 ```
-isyshell/
+isysproject/
 ├── app/
-│   ├── main.py        # Roteador principal da API
-│   ├── auth.py        # Validação do token X-Isy-Token
-│   ├── database.py    # Banco SQLite e tabelas
-│   ├── executor.py    # Execução segura de scripts
-│   ├── schemas.py     # Modelos de dados Pydantic
-│   └── alerts.py      # Alerta Discord (diferencial)
-├── scripts/           # Scripts .sh (volume Docker)
+│   ├── main.py        # Roteador principal — todas as rotas da API
+│   ├── auth.py        # Autenticação — verifica token de usuário ou admin
+│   ├── database.py    # Banco SQLite — tabelas e funções auxiliares
+│   ├── executor.py    # Execução segura de scripts com subprocess
+│   ├── schemas.py     # Moldes Pydantic para validação de dados
+│   ├── users.py       # Lógica de usuários, planos e rate limiting
+│   ├── analytics.py   # Consultas de métricas e estatísticas
+│   └── payments.py    # Webhook Stripe para upgrades automáticos
+├── scripts/           # Scripts .sh (volume Docker — editável sem rebuild)
 ├── docs/              # Documentação completa
+├── futuras_implementacoes/  # Funcionalidades planejadas
 ├── data/              # Banco de dados SQLite (gerado automaticamente)
+├── .env.example       # Variáveis de ambiente necessárias
 ├── Dockerfile
 ├── docker-compose.yml
 ├── requirements.txt
@@ -190,6 +209,9 @@ isyshell/
 | `docs/04_DOCKER.md` | Docker explicado para leigos |
 | `docs/05_ROTEIRO_PITCH.md` | Roteiro e respostas para a banca |
 | `docs/06_GLOSSARIO.md` | Termos técnicos em uma linha |
+| `docs/07_USUARIOS_E_PLANOS.md` | Sistema freemium, planos e rate limiting |
+| `docs/08_ANALYTICS.md` | Métricas de uso e como interpretá-las |
+| `docs/09_FREEMIUM_E_PAGAMENTOS.md` | Integração Stripe passo a passo |
 | `docs/diagrama_arquitetura.md` | Diagrama Mermaid da arquitetura |
 
 ---
@@ -208,4 +230,10 @@ isyshell/
 - [x] Endpoint de consulta do histórico
 - [x] Dockerfile com python:3.11-slim
 - [x] docker-compose com volume para scripts
-- [x] Alerta Discord em falhas (diferencial)
+- [x] Sistema de usuários com planos freemium (free/pro/enterprise)
+- [x] Rate limiting por plano (execuções/dia)
+- [x] Controle de acesso por plano nos scripts (plano_minimo)
+- [x] Analytics: resumo diário, scripts mais usados, clientes mais ativos, falhas
+- [x] Tempo de execução registrado por script (duracao_segundos)
+- [x] Webhook Stripe para upgrade automático de plano
+- [x] Hash seguro de senhas com PBKDF2-HMAC-SHA256

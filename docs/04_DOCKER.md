@@ -67,12 +67,19 @@ services:          # lista de serviços (containers) a gerenciar
       - ./data:/app/data
 
     environment:
-      - SCRIPTS_PATH=/scripts          # onde a API busca os scripts
+      - SCRIPTS_PATH=/scripts              # onde a API busca os scripts
       - DATABASE_PATH=/app/data/isyshell.db
-      - DISCORD_WEBHOOK_URL=           # vazio = alertas desligados
+
+      # Variáveis do Stripe (opcional — necessário apenas para pagamentos)
+      # - STRIPE_WEBHOOK_SECRET=whsec_...
+      # - STRIPE_PRICE_PRO=price_...
+      # - STRIPE_PRICE_ENTERPRISE=price_...
 
     restart: unless-stopped  # reinicia automaticamente se travar
 ```
+
+> As variáveis do Stripe ficam comentadas por padrão. Quando for integrar
+> pagamentos, copie `.env.example` para `.env` e preencha os valores.
 
 ---
 
