@@ -12,3 +12,4 @@ __pycache__/
 # Variáveis de ambiente — se criar futuramente para guardar tokens/segredos
 .env
 .env.*
+!.env.example
