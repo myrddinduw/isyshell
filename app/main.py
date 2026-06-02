@@ -1,12 +1,3 @@
-# main.py — Ponto de entrada da API. Cria o app FastAPI e registra todas as rotas.
-#
-# O que é uma "rota"? É um endereço (URL) que a API responde.
-# Cada rota tem um "método HTTP" que indica a intenção:
-#   GET    = buscar informação
-#   POST   = criar / executar algo
-#   PUT    = atualizar algo existente
-#   DELETE = remover algo
-#
 # Estrutura das rotas:
 #   /health                          → verificação de saúde (pública)
 #   /scripts                         → gerenciar scripts
@@ -54,9 +45,8 @@ def ao_iniciar():
     print("✅ IsyShell iniciada! Acesse /docs para ver a documentação interativa.")
 
 
-# ==============================================================
+
 # ROTA DE SAÚDE — pública, sem token
-# ==============================================================
 
 @app.get("/health", tags=["Sistema"])
 def health_check():
@@ -64,9 +54,7 @@ def health_check():
     return {"status": "ok", "mensagem": "IsyShell está funcionando!"}
 
 
-# ==============================================================
 # ROTAS DE SCRIPTS — listar, cadastrar, editar, executar
-# ==============================================================
 
 @app.get("/scripts", tags=["Scripts"])
 def listar_scripts(usuario: dict = Depends(verificar_token)):
@@ -221,9 +209,8 @@ def executar(
     }
 
 
-# ==============================================================
+
 # ROTAS DE LOGS — consultar histórico de execuções
-# ==============================================================
 
 @app.get("/logs", tags=["Auditoria"])
 def consultar_logs(
@@ -272,9 +259,7 @@ def consultar_logs(
     }
 
 
-# ==============================================================
 # ROTA DE CONFIGURAÇÃO — trocar o token de administrador
-# ==============================================================
 
 @app.put("/config/token", tags=["Configuração"])
 def trocar_token(
@@ -305,9 +290,7 @@ def trocar_token(
     }
 
 
-# ==============================================================
 # ROTAS DE USUÁRIOS — cadastro, login, perfil, plano
-# ==============================================================
 
 @app.post("/usuarios/registrar", tags=["Usuários"], status_code=201)
 def registrar(dados: UsuarioRegistrar):
@@ -428,9 +411,8 @@ def alterar_plano(
     }
 
 
-# ==============================================================
+
 # ROTAS DE ANALYTICS — métricas e estatísticas (somente admin)
-# ==============================================================
 
 @app.get("/analytics/resumo", tags=["Analytics"])
 def analytics_resumo(
@@ -503,9 +485,8 @@ def analytics_falhas(
     }
 
 
-# ==============================================================
+
 # WEBHOOK DO STRIPE — recebe eventos de pagamento
-# ==============================================================
 
 @app.post("/webhooks/stripe", tags=["Pagamentos"])
 async def webhook_stripe(request: Request):
