@@ -21,6 +21,7 @@ COPY requirements.txt .
 
 # INSTRUÇÃO RUN: executa um comando durante a construção da imagem.
 # --no-cache-dir = não guarda cache local do pip (economiza espaço na imagem)
+RUN apt-get update && apt-get install -y --no-install-recommends tzdata && rm -rf /var/lib/apt/lists/*
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copia o resto do código para dentro da imagem

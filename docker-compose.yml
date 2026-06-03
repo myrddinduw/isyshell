@@ -38,11 +38,9 @@ services:
     # VARIÁVEIS DE AMBIENTE: configuram o comportamento da aplicação.
     # Elas substituem valores padrão definidos no código com os.getenv().
     environment:
-      # Pasta onde a API vai procurar os scripts .sh
       - SCRIPTS_PATH=/scripts
-
-      # Caminho do banco de dados dentro do container
       - DATABASE_PATH=/app/data/isyshell.db
+      - TZ=America/Sao_Paulo
 
     # RESTART: reinicia o container automaticamente se ele travar ou o servidor reiniciar.
     # "unless-stopped" = reinicia sempre, a menos que você pare manualmente.
