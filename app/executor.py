@@ -2,7 +2,7 @@ import subprocess
 import re
 import os
 import time
-from datetime import datetime, timezone
+from datetime import datetime
 
 from app.database import get_connection
 
@@ -54,7 +54,7 @@ def executar_script(script_id: int, parametros: list, usuario_id: int = None) ->
                     "status_retorno": "erro", "duracao_segundos": None, "nome_script": script["nome"]}
 
     comando = ["bash", caminho_completo] + parametros
-    horario = datetime.now(timezone.utc).isoformat()
+    horario = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
     inicio  = time.time()
 
     try:

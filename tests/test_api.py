@@ -186,12 +186,12 @@ def test_rate_limit_plano_free(client):
 
     # Insere 10 execucoes manualmente no banco para simular o limite atingido
     from app.database import get_connection
-    from datetime import datetime, timezone
+    from datetime import datetime
     conn = get_connection()
     for _ in range(10):
         conn.execute(
             "INSERT INTO execucoes (script_id, usuario_id, params_usados, horario, status_retorno) VALUES (?,?,?,?,?)",
-            (1, u["id"], "", datetime.now(timezone.utc).isoformat(), "sucesso")
+            (1, u["id"], "", datetime.now().strftime("%Y-%m-%dT%H:%M:%S"), "sucesso")
         )
     conn.commit()
     conn.close()
