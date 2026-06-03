@@ -13,6 +13,19 @@ PASTA_SCRIPTS = os.getenv("SCRIPTS_PATH", "/scripts")
 REGEX_PARAMETRO_SEGURO = re.compile(r'^[\w\-\.\/\s]+$')
 
 
+def _registrar_erro(cursor, conn, script_id: int, usuario_id, parametros: list, mensagem: str):
+    """Grava execucao com status 'erro' no banco antes de retornar antecipadamente."""
+    cursor.execute(
+        """INSERT INTO execucoes
+           (script_id, usuario_id, params_usados, horario, status_retorno, duracao_segundos, stdout, stderr)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+        (script_id, usuario_id, " ".join(parametros),
+         datetime.now().strftime("%Y-%m-%dT%H:%M:%S"), "erro", None, "", mensagem)
+    )
+    conn.commit()
+    conn.close()
+
+
 def parametro_e_seguro(param: str) -> bool:
     if not param or not param.strip():
         return False
@@ -43,13 +56,13 @@ def executar_script(script_id: int, parametros: list, usuario_id: int = None) ->
     caminho_completo = os.path.join(PASTA_SCRIPTS, script["caminho"])
 
     if not os.path.isfile(caminho_completo):
-        conn.close()
+        _registrar_erro(cursor, conn, script_id, usuario_id, parametros, f"Arquivo nao encontrado: {caminho_completo}")
         return {"codigo_retorno": -1, "stdout": "", "stderr": f"Arquivo nao encontrado: {caminho_completo}",
                 "status_retorno": "erro", "duracao_segundos": None, "nome_script": script["nome"]}
 
     for param in parametros:
         if not parametro_e_seguro(param):
-            conn.close()
+            _registrar_erro(cursor, conn, script_id, usuario_id, parametros, f"Parametro invalido: '{param}'")
             return {"codigo_retorno": -1, "stdout": "", "stderr": f"Parametro invalido: '{param}'",
                     "status_retorno": "erro", "duracao_segundos": None, "nome_script": script["nome"]}
 

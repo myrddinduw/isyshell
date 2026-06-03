@@ -15,16 +15,8 @@ echo ""
 
 # Verifica se o comando docker está disponível neste ambiente
 if ! command -v docker &>/dev/null; then
-    echo "AVISO: O comando 'docker' não está disponível neste container."
-    echo "Em produção, este script seria executado no servidor host."
-    echo ""
-    echo "Simulação do que seria exibido:"
-    echo "  CONTAINER ID   IMAGE          STATUS         NAMES"
-    echo "  a1b2c3d4e5f6   isyshell_app   Up 2 hours     isyshell-app-1"
-    echo "  f6e5d4c3b2a1   nginx:latest   Up 5 minutes   webserver"
-    echo ""
-    echo "=== Diagnóstico simulado concluído ==="
-    exit 0
+    echo "ERRO: O comando 'docker' nao esta disponivel neste ambiente." >&2
+    exit 1
 fi
 
 # Lista containers em execução
